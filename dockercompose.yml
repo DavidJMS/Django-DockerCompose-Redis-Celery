@@ -1,0 +1,38 @@
+version: "1"
+
+services:
+
+  backend:
+    build:
+      context: .
+      dockerfile: dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/usr/src/app/
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ./.env
+
+  postgres:
+    image: postgres
+    container_name: postgres
+    env_file:
+      - ./.postgres
+
+  redis:
+    image: redis:3.2
+
+  celeryworker:
+    build: .
+    command: celery -A backend worker -l INFO
+    volumes:
+      - .:/usr/src/app/
+    depends_on:
+      - backend
+      - redis
+
+# docker-compose -f file build: Construye el contenedor.
